@@ -21,10 +21,10 @@
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
-#include <stdio.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
 #include "1wire.h"
 #include "ioputchar.h"
 #include "ds18b20.h"
@@ -91,6 +91,7 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM6_Init();
   MX_USART2_UART_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   if (ds18b20_init() != HAL_OK) {
     printf("Error init\n");
