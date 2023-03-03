@@ -41,14 +41,14 @@ void
 LSM6DS33_enable_acc ()
 {
   LSM6DS33_write_register (LSM6DS33_CTRL1_XL, 0x30);
-  // LSM6DS33_write_register(LSM6DS33_CTRL9_XL, 0x38);
+ // LSM6DS33_write_register(LSM6DS33_CTRL9_XL, 0x38);
 }
 
 void
 LSM6DS33_enable_gyro ()
 {
   LSM6DS33_write_register (LSM6DS33_CTRL2_G, 0x30);
-  //LSM6DS33_write_register(LSM6DS33_CTRL9_XL, 0x38);
+  LSM6DS33_write_register(LSM6DS33_CTRL9_XL, 0x38);
 }
 void
 LSM6DS33_read_acc_data (LSM6DS33 *device)
@@ -80,13 +80,13 @@ LSM6DS33_read_acc_data (LSM6DS33 *device)
   device->acclX = (acclXH << 8) | (acclXL);
   device->acclY = (acclYH << 8) | (acclYL);
   device->acclZ = (acclZH << 8) | (acclZL);
-  //float x = device->acclX * 2.0f / 32678.0f;
- // float y = device->acclY * 2.0f / 32678.0f;
- // float z = device->acclZ * 2.0f / 32678.0f;
-  //printf ("Acc: X = %.2f   Y = %.2f   Z = %.2f\n", x, y, z);
+  float x = device->gyroX * 2.0f / 32678.0f;
+  float y = device->gyroY * 2.0f / 32678.0f;
+  float z = device->gyroZ * 2.0f / 32678.0f;
+  //printf ("\033[27\033[H\nAcc: X = %d   \nY = %.2f   \nZ = %.2f    \n", device->gyroX, y, z);
 
- // printf ("Gyro: X = %d   Y = %d   Z = %d\n", device->gyroX, device->gyroY, device->gyroZ);
-  //printf("Acc: X = %d   Y = %d   Z = %d\n", acclX, acclY, acclZ);
+  printf ("\033[27\033[H\nGyro: X = %d    \nY = %d    \nZ = %d    \n", device->gyroX, device->gyroY, device->gyroZ);
+  printf("Acc: X = %d   \nY = %d   \nZ = %d        \n",  device->acclX,  device->acclY,  device->acclZ);
 
 }
 

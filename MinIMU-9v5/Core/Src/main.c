@@ -111,8 +111,9 @@ main (void)
       /* USER CODE END WHILE */
 
       /* USER CODE BEGIN 3 */
-      //LSM6DS33_read_acc_data (&device);
-      dcmData.counter++;
+      LSM6DS33_read_acc_data (&device);
+      HAL_Delay(100);
+      /*dcmData.counter++;
       dcmData.timer_old = dcmData.timer;
       dcmData.timer = HAL_GetTick ();
       if (dcmData.timer > dcmData.timer_old)
@@ -149,6 +150,8 @@ main (void)
 	       dcmData.sensorData.accl_z);
       HAL_UART_Transmit (&huart2, buffer, strlen (buffer), HAL_MAX_DELAY);
       HAL_Delay (100);
+*/
+
 
     }
   /* USER CODE END 3 */
