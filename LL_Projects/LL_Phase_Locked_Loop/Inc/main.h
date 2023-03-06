@@ -15,7 +15,12 @@
 #include "stm32l4xx_ll_utils.h"
 #include "stm32l4xx_ll_gpio.h"
 
+#include "software_timer.h"
+
 #define LED_GREEN_Pin LL_GPIO_PIN_5
 #define LED_GREEN_GPIO_Port GPIOA
+
+#define USER_BUTTON_Pin LL_GPIO_PIN_13
+#define USER_BUTTON_GPIO_Port GPIOC
 
 #endif /* MAIN_H_ */

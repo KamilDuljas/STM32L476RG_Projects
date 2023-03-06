@@ -18,31 +18,39 @@
 
 #include <stdint.h>
 #include "main.h"
-
+#include "software_timer.h"
 int main(void)
 {
+
+#define LED_TASK_TIME 1000
+
+	software_timer_t led_timer;
+	software_timer_task_init(&led_timer, LED_TASK_TIME);
 
 	// Set Latency for HCLK <= 80 MHz
 	LL_FLASH_SetLatency(LL_FLASH_LATENCY_4);
 
 	// Initialize clock
 	LL_RCC_HSI_Enable();
-	while (LL_RCC_HSI_IsReady() != 1);
+	while (LL_RCC_HSI_IsReady() != 1)
+		;
 	// 16 MHz /1 * 10 /2
 	LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI, LL_RCC_PLLM_DIV_1, 10, LL_RCC_PLLR_DIV_2);
 	LL_RCC_PLL_Enable();
-	while(LL_RCC_PLL_IsReady() != 1);
+	while (LL_RCC_PLL_IsReady() != 1)
+		;
 
 	// Initialize PLLR output
 	LL_RCC_PLL_EnableDomain_SYS();
 	LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
-	while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL);
+	while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL)
+		;
 
-
-	LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA);
+	LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA | LL_AHB2_GRP1_PERIPH_GPIOC);
 
 	LL_SetSystemCoreClock(80000000);
 	LL_Init1msTick(80000000);
+	LL_SYSTICK_EnableIT();
 
 	// Initialize Led
 	LL_GPIO_SetPinOutputType(LED_GREEN_GPIO_Port, LED_GREEN_Pin, LL_GPIO_OUTPUT_PUSHPULL);
@@ -50,9 +58,20 @@ int main(void)
 	LL_GPIO_SetPinSpeed(LED_GREEN_GPIO_Port, LED_GREEN_Pin, LL_GPIO_SPEED_FREQ_LOW);
 	LL_GPIO_SetPinMode(LED_GREEN_GPIO_Port, LED_GREEN_Pin, LL_GPIO_MODE_OUTPUT);
 
+	// Initialize USER_BUTTON
+	LL_GPIO_SetPinPull(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin, LL_GPIO_PULL_NO);
+	LL_GPIO_SetPinSpeed(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinMode(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin, LL_GPIO_MODE_INPUT);
+
 	while (1)
 	{
-	     LL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-	     LL_mDelay(1000);
+		if (LL_GPIO_IsInputPinSet(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) == 0)
+		{
+			if ((software_timer_get_ms_tick() - led_timer.ms_tick) >= led_timer.task_time)
+			{
+				led_timer.ms_tick = software_timer_get_ms_tick();
+				LL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+			}
+		}
 	}
 }
