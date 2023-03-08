@@ -14,6 +14,7 @@
 #include "stm32l4xx_ll_cortex.h"
 #include "stm32l4xx_ll_utils.h"
 #include "stm32l4xx_ll_gpio.h"
+#include "stm32l4xx_ll_exti.h"
 
 #include "software_timer.h"
 

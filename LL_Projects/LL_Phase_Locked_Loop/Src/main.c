@@ -19,14 +19,25 @@
 #include <stdint.h>
 #include "main.h"
 #include "software_timer.h"
-int main(void)
+
+static void Initialize_GPIO()
 {
+	LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA | LL_AHB2_GRP1_PERIPH_GPIOC);
 
-#define LED_TASK_TIME 1000
+	// Initialize Led
+	LL_GPIO_SetPinOutputType(LED_GREEN_GPIO_Port, LED_GREEN_Pin, LL_GPIO_OUTPUT_PUSHPULL);
+	LL_GPIO_SetPinPull(LED_GREEN_GPIO_Port, LED_GREEN_Pin, LL_GPIO_PULL_NO);
+	LL_GPIO_SetPinSpeed(LED_GREEN_GPIO_Port, LED_GREEN_Pin, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinMode(LED_GREEN_GPIO_Port, LED_GREEN_Pin, LL_GPIO_MODE_OUTPUT);
 
-	software_timer_t led_timer;
-	software_timer_task_init(&led_timer, LED_TASK_TIME);
+	// Initialize USER_BUTTON
+	LL_GPIO_SetPinPull(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin, LL_GPIO_PULL_UP);
+	LL_GPIO_SetPinSpeed(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin, LL_GPIO_SPEED_FREQ_LOW);
+	LL_GPIO_SetPinMode(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin, LL_GPIO_MODE_INPUT);
+}
 
+static void SystemClock_Config()
+{
 	// Set Latency for HCLK <= 80 MHz
 	LL_FLASH_SetLatency(LL_FLASH_LATENCY_4);
 
@@ -46,25 +57,40 @@ int main(void)
 	while (LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL)
 		;
 
-	LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOA | LL_AHB2_GRP1_PERIPH_GPIOC);
-
 	LL_SetSystemCoreClock(80000000);
 	LL_Init1msTick(80000000);
 	LL_SYSTICK_EnableIT();
+}
 
-	// Initialize Led
-	LL_GPIO_SetPinOutputType(LED_GREEN_GPIO_Port, LED_GREEN_Pin, LL_GPIO_OUTPUT_PUSHPULL);
-	LL_GPIO_SetPinPull(LED_GREEN_GPIO_Port, LED_GREEN_Pin, LL_GPIO_PULL_NO);
-	LL_GPIO_SetPinSpeed(LED_GREEN_GPIO_Port, LED_GREEN_Pin, LL_GPIO_SPEED_FREQ_LOW);
-	LL_GPIO_SetPinMode(LED_GREEN_GPIO_Port, LED_GREEN_Pin, LL_GPIO_MODE_OUTPUT);
+static void Enable_EXTI_PC13()
+{
+	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_13);
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_13);
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTC, LL_SYSCFG_EXTI_LINE13);
 
-	// Initialize USER_BUTTON
-	LL_GPIO_SetPinPull(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin, LL_GPIO_PULL_NO);
-	LL_GPIO_SetPinSpeed(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin, LL_GPIO_SPEED_FREQ_LOW);
-	LL_GPIO_SetPinMode(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin, LL_GPIO_MODE_INPUT);
+	NVIC_SetPriority(EXTI15_10_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),1, 0));
+	NVIC_EnableIRQ(EXTI15_10_IRQn);
+}
+
+software_timer_t led_timer;
+uint8_t flag = 0;
+uint8_t flag2 = 90;
+int main(void)
+{
+	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
+	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
+
+#define LED_TASK_TIME 1000
+
+	SystemClock_Config();
+	Initialize_GPIO();
+	Enable_EXTI_PC13();
+
+	software_timer_task_init(&led_timer, LED_TASK_TIME);
 
 	while (1)
 	{
+
 		if (LL_GPIO_IsInputPinSet(USER_BUTTON_GPIO_Port, USER_BUTTON_Pin) == 0)
 		{
 			if ((software_timer_get_ms_tick() - led_timer.ms_tick) >= led_timer.task_time)
